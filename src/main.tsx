@@ -8,7 +8,7 @@ import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter basename="/attendencetracker-/">
+    <BrowserRouter basename="/attendencetracker/">
       <ThemeProvider>
         <AuthProvider>
           <App />

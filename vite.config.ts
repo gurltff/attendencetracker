@@ -4,7 +4,7 @@ import { copyFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 export default defineConfig({
-  base: '/attendencetracker-/',
+  base: '/attendencetracker/',
 
   plugins: [
     react(),
