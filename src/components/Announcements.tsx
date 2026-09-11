@@ -1,4 +1,5 @@
 import type { Announcement } from '../types'
+import { sanitizeText } from '../utils/sanitization'
 
 const CATEGORY_COLORS: Record<string, string> = {
   Academic: 'bg-sky text-ink',
@@ -34,13 +35,13 @@ export function AnnouncementCard({
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-bold text-ink">{a.title}</h3>
-            <span className={`badge border-ink ${CATEGORY_COLORS[a.category]}`}>{a.category}</span>
+            <h3 className="font-bold text-ink">{sanitizeText(a.title)}</h3>
+            <span className={`badge border-ink ${CATEGORY_COLORS[a.category]}`}>{sanitizeText(a.category)}</span>
             {a.isUrgent && <span className="badge bg-ink text-cream-soft border-ink">URGENT</span>}
           </div>
-          <p className="text-sm mt-1 text-ink/80">{a.message}</p>
+          <p className="text-sm mt-1 text-ink/80">{sanitizeText(a.message)}</p>
           <p className="text-xs mt-2 text-ink/60">
-            {a.authorName} · {new Date(a.createdAt).toLocaleDateString()}
+            {sanitizeText(a.authorName)} · {new Date(a.createdAt).toLocaleDateString()}
             {a.expiresAt ? ` · expires ${new Date(a.expiresAt).toLocaleDateString()}` : ''}
           </p>
         </div>

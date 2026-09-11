@@ -5,8 +5,40 @@
 // upgrade needed). Firestore documents cap out at 1MB, so we resize + compress
 // aggressively to comfortably fit a JPEG selfie under that limit.
 
+import { validateImageFile } from '../utils/sanitization'
+
 const MAX_DIMENSION = 480 // px, longest side
 const JPEG_QUALITY = 0.6 // 0-1
+
+/**
+ * Validate base64 data URL is a safe image format
+ * @param dataUrl - Data URL to validate
+ * @returns true if valid image format
+ */
+function validateBase64Image(dataUrl: string): boolean {
+  if (!dataUrl || typeof dataUrl !== 'string') {
+    return false
+  }
+
+  // Check for data URL format
+  if (!dataUrl.startsWith('data:')) {
+    return false
+  }
+
+  // Allow only image MIME types
+  const allowedImageMimes = [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+  ]
+  const mimeMatch = dataUrl.match(/^data:([^;]+)/)
+  if (!mimeMatch || !allowedImageMimes.includes(mimeMatch[1])) {
+    console.warn(`Rejected unsafe MIME type in data URL: ${mimeMatch?.[1]}`)
+    return false
+  }
+
+  return true
+}
 
 /** Resizes/recompresses a base64 JPEG data URL so it safely fits in a Firestore field. */
 function compressDataUrl(dataUrl: string): Promise<string> {
@@ -43,6 +75,13 @@ export async function uploadAttendancePhoto(
   _courseId: string,
   dataUrl: string
 ): Promise<string> {
+  // SECURITY: Validate image format before processing
+  if (!validateBase64Image(dataUrl)) {
+    throw new Error(
+      'Invalid image format. Only JPEG, PNG, and WebP images are allowed.'
+    )
+  }
+
   const compressed = await compressDataUrl(dataUrl)
   if (compressed.length > 900_000) {
     // ~900KB base64 leaves headroom under Firestore's 1MB document limit.

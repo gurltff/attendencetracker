@@ -27,38 +27,11 @@ import type {
 const LS_USER =
   'sat_current_user'
 
-async function sha256(
-  text: string
-): Promise<string> {
-  const buffer =
-    await crypto.subtle.digest(
-      'SHA-256',
-      new TextEncoder().encode(text)
-    )
-
-  return Array.from(
-    new Uint8Array(buffer)
-  )
-    .map((byte) =>
-      byte
-        .toString(16)
-        .padStart(2, '0')
-    )
-    .join('')
-}
-
-function readLocalUsers(): (
-  UserProfile & { id: string }
-)[] {
-  const raw =
-    localStorage.getItem(
-      'sat_users'
-    )
-
-  return raw
-    ? JSON.parse(raw)
-    : []
-}
+/*
+ * SECURITY: Password storage removed from client.
+ * Non-Firebase mode is for development only.
+ * Passwords are NEVER stored on client—use Firebase Auth.
+ */
 
 export async function signUp(
   name: string,
@@ -136,33 +109,12 @@ export async function signUp(
       throw error
     }
   } else {
-    const existing =
-      readLocalUsers().find(
-        (item) =>
-          item.email.toLowerCase() ===
-          email.toLowerCase()
-      )
-
-    if (existing) {
-      throw new Error(
-        'An account with this email already exists. Please log in instead.'
-      )
-    }
-
-    uid =
-      `local_${Date.now()}`
-
-    localStorage.setItem(
-      LS_USER,
-      JSON.stringify({
-        uid,
-        email,
-      })
-    )
-
-    localStorage.setItem(
-      `sat_pwd_${uid}`,
-      await sha256(password)
+    /*
+     * SECURITY: Non-Firebase mode is for development/demo only.
+     * Signup requires Firebase Auth in production.
+     */
+    throw new Error(
+      'Account creation requires Firebase to be configured. Configure Firebase credentials in your environment.'
     )
   }
 
@@ -205,7 +157,7 @@ export async function signUp(
 export async function logIn(
   email: string,
   password: string
-): Promise<UserProfile | null> {
+): Promise<UserProfile> {
 
   // Validate email and password inputs
   if (
@@ -234,87 +186,53 @@ export async function logIn(
     )
   }
 
-  if (
-    isFirebaseConfigured &&
-    auth
-  ) {
-    await authReady
-    try {
-      const credential =
-        await signInWithEmailAndPassword(
-          auth,
-          emailTrimmed,
-          password
-        )
+  if (!isFirebaseConfigured || !auth) {
+    /*
+     * SECURITY: Non-Firebase login is disabled.
+     * Passwords are NEVER stored on client.
+     * Use Firebase Auth in production.
+     */
+    throw new Error(
+      'Firebase Auth is required for login. Please configure your Firebase credentials.'
+    )
+  }
 
-      const profile = await getById<UserProfile>(
-        'users',
-        credential.user.uid
+  await authReady
+  try {
+    const credential =
+      await signInWithEmailAndPassword(
+        auth,
+        emailTrimmed,
+        password
       )
 
-      if (!profile) {
-        // Sign out the user since their profile doesn't exist
-        await fbSignOut(auth)
-        throw new Error(
-          'Your Firebase account exists, but its user profile is missing. Contact your administrator.'
-        )
-      }
+    const profile = await getById<UserProfile>(
+      'users',
+      credential.user.uid
+    )
 
-      return profile
-    } catch (error: any) {
-      if (
-        error?.code === 'auth/user-not-found' ||
-        error?.code ===
-          'auth/invalid-email' ||
-        error?.code ===
-          'auth/wrong-password'
-      ) {
-        throw new Error(
-          'Invalid email or password.'
-        )
-      }
-
-      throw error
+    if (!profile) {
+      // Sign out the user since their profile doesn't exist
+      await fbSignOut(auth)
+      throw new Error(
+        'Your Firebase account exists, but its user profile is missing. Contact your administrator.'
+      )
     }
+
+    return profile
+  } catch (error: any) {
+    if (
+      error?.code === 'auth/user-not-found' ||
+      error?.code === 'auth/invalid-email' ||
+      error?.code === 'auth/wrong-password'
+    ) {
+      throw new Error(
+        'Invalid email or password.'
+      )
+    }
+
+    throw error
   }
-
-  const found =
-    readLocalUsers().find(
-      (user) =>
-        user.email.toLowerCase() ===
-        emailTrimmed
-    )
-
-  if (!found) {
-    throw new Error(
-      'Invalid email or password.'
-    )
-  }
-
-  const storedHash =
-    localStorage.getItem(
-      `sat_pwd_${found.uid}`
-    )
-
-  if (
-    !storedHash ||
-    storedHash !==
-      (await sha256(password))
-  ) {
-    throw new Error(
-      'Invalid email or password.'
-    )
-  }
-
-  localStorage.setItem(
-    LS_USER,
-    JSON.stringify({
-      uid: found.uid,
-      email: emailTrimmed,
-    })
-  )
-
-  return found
 }
 
 export async function resetPassword(
@@ -346,6 +264,15 @@ export async function logOut() {
   localStorage.removeItem(
     LS_USER
   )
+  // Clean up any remaining sensitive data
+  localStorage.removeItem('sat_users')
+  Object.keys(localStorage)
+    .filter(
+      (key) => key.startsWith('sat_pwd_')
+    )
+    .forEach((key) =>
+      localStorage.removeItem(key)
+    )
 }
 
 export function watchAuthState(

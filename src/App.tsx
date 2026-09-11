@@ -4,6 +4,7 @@ import {
   ProtectedRoute,
   ToastProvider,
 } from './components/Shared'
+import ErrorBoundary from './components/ErrorBoundary'
 
 import AuthPage from './pages/AuthPage'
 import CRDashboard from './pages/CRDashboard'
@@ -14,8 +15,9 @@ import TimetablePage from './pages/TimetablePage'
 
 export default function App() {
   return (
-    <ToastProvider>
-      <Navbar />
+    <ErrorBoundary>
+      <ToastProvider>
+        <Navbar />
 
       <Routes>
 
@@ -72,6 +74,7 @@ export default function App() {
         />
 
       </Routes>
-    </ToastProvider>
+      </ToastProvider>
+    </ErrorBoundary>
   )
 }
