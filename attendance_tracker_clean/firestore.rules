@@ -1,0 +1,166 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function myProfile() {
+      return get(
+        /databases/$(database)/documents/users/$(request.auth.uid)
+      ).data;
+    }
+
+    function myRole() {
+      return myProfile().role;
+    }
+
+    function sameClass(studentId) {
+      let student = get(
+        /databases/$(database)/documents/users/$(studentId)
+      ).data;
+
+      return student.enrolledCourseIds[0]
+        == myProfile().enrolledCourseIds[0]
+        && student.year
+        == myProfile().year;
+    }
+
+    function teacherOwnsCourse(courseKey) {
+      return myRole() == 'teacher'
+        && courseKey in myProfile().assignedCourseIds;
+    }
+
+
+    // USERS
+    match /users/{uid} {
+
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.role in ['student', 'teacher'];
+
+      // User can update their own profile without changing role.
+      //
+      // Teacher can change student <-> CR.
+      allow update: if signedIn() && (
+        (
+          request.auth.uid == uid
+          && request.resource.data.role == resource.data.role
+        )
+        ||
+        (
+          myRole() == 'teacher'
+          && resource.data.role in ['student', 'cr']
+          && request.resource.data.role in ['student', 'cr']
+        )
+      );
+
+      allow delete: if false;
+    }
+
+
+    // COURSES
+    match /courses/{id} {
+
+      allow read: if signedIn();
+
+      allow write: if signedIn()
+        && myRole() in ['teacher', 'cr'];
+    }
+
+
+    // ANNOUNCEMENTS
+    match /announcements/{id} {
+
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && myRole() == 'cr'
+        && request.resource.data.authorId == request.auth.uid;
+
+      allow update, delete: if signedIn()
+        && myRole() == 'cr'
+        && resource.data.authorId == request.auth.uid;
+    }
+
+
+    // ATTENDANCE
+    match /attendanceRecords/{id} {
+
+      // Teacher can VIEW attendance.
+      //
+      // CR can VIEW attendance belonging to their class.
+      //
+      // Student/CR can view their own attendance.
+      allow read: if signedIn() && (
+        resource.data.studentId == request.auth.uid
+        ||
+        myRole() == 'teacher'
+        ||
+        (
+          myRole() == 'cr'
+          && sameClass(resource.data.studentId)
+        )
+      );
+
+
+      // Student and CR can ONLY submit their own presence.
+      //
+      // Teacher can create attendance only for their assigned subject.
+      allow create: if signedIn() && (
+
+        (
+          myRole() in ['student', 'cr']
+          && request.resource.data.studentId == request.auth.uid
+          && request.resource.data.source == 'student_self_checkin'
+        )
+
+        ||
+
+        (
+          myRole() == 'teacher'
+          && request.resource.data.source == 'teacher_marked'
+          && request.resource.data.teacherId == request.auth.uid
+          && teacherOwnsCourse(request.resource.data.courseKey)
+        )
+      );
+
+
+      // ONLY TEACHERS can change/delete attendance.
+      allow update, delete: if signedIn()
+        && myRole() == 'teacher'
+        && teacherOwnsCourse(resource.data.courseKey);
+    }
+
+
+    // ATTENDANCE SESSIONS
+    match /attendanceSessions/{id} {
+
+      allow read: if signedIn()
+        && myRole() in ['teacher', 'cr'];
+
+      allow create, update, delete: if signedIn()
+        && myRole() == 'teacher'
+        && request.resource.data.teacherId == request.auth.uid
+        && teacherOwnsCourse(request.resource.data.courseKey);
+    }
+
+
+    // TIMETABLE
+    match /timetableEntries/{id} {
+
+      allow read, write: if signedIn()
+        && request.resource.data.studentId == request.auth.uid;
+    }
+
+
+    // DENY EVERYTHING ELSE
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

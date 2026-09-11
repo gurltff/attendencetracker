@@ -1,0 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-cream text-ink font-sans antialiased dark:bg-ink dark:text-cream-soft;
+  background-image: radial-gradient(circle at 1px 1px, rgba(21, 19, 15, 0.05) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+
+.dark body {
+  background-image: radial-gradient(circle at 1px 1px, rgba(247, 241, 227, 0.06) 1px, transparent 0);
+}
+
+.dark .text-ink,
+.dark .text-ink\/80,
+.dark .text-ink\/70,
+.dark .text-ink\/60,
+.dark .text-ink\/50,
+.dark .text-ink\/40,
+.dark .text-ink-muted {
+  color: rgba(247, 241, 227, 0.92) !important;
+}
+
+.dark .border-ink,
+.dark .border-ink\/80,
+.dark .border-ink\/70,
+.dark .border-ink\/60,
+.dark .border-ink\/50,
+.dark .border-ink\/40,
+.dark .border-ink\/20,
+.dark .border-ink\/15,
+.dark .border-ink\/10 {
+  border-color: rgba(247, 241, 227, 0.35) !important;
+}
+
+/* ---------- Surfaces ---------- */
+.card {
+  @apply bg-cream-soft dark:bg-ink-soft border-2 border-ink dark:border-cream-soft/70 rounded-3xl shadow-pop dark:shadow-none p-4 sm:p-5 transition-colors;
+}
+
+.card-tint {
+  @apply border-2 border-ink rounded-3xl shadow-pop p-4 sm:p-5 dark:bg-ink-soft dark:border-cream-soft/70 dark:text-cream-soft;
+}
+
+.tint-butter {
+  @apply bg-butter;
+}
+
+.tint-blush {
+  @apply bg-blush;
+}
+
+.tint-sage {
+  @apply bg-sage;
+}
+
+.tint-sky {
+  @apply bg-sky;
+}
+
+.panel-dark {
+  @apply bg-ink text-cream-soft rounded-3xl p-4 sm:p-5;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  @apply px-4 py-2 rounded-full font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed active:translate-y-[1px];
+}
+
+.btn-primary {
+  @apply btn bg-ink text-cream-soft border-2 border-ink shadow-pop hover:bg-ink-soft active:shadow-none dark:bg-cream-soft dark:text-ink dark:border-cream-soft;
+}
+
+.btn-outline {
+  @apply btn bg-transparent border-2 border-ink text-ink shadow-pop hover:bg-ink hover:text-cream-soft active:shadow-none dark:border-cream-soft/70 dark:text-cream-soft dark:hover:bg-cream-soft dark:hover:text-ink;
+}
+
+.btn-outline.is-active {
+  @apply bg-ink text-cream-soft dark:bg-cream-soft dark:text-ink;
+}
+
+/* ---------- Inputs ---------- */
+.input {
+  @apply w-full rounded-2xl border-2 border-ink/80 bg-cream-soft dark:bg-ink dark:border-cream-soft/50 px-3 py-2 text-sm placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-butter-deep dark:text-cream-soft transition-colors;
+}
+
+/* ---------- Badges / pills ---------- */
+.badge {
+  @apply inline-block text-xs font-semibold px-2.5 py-1 rounded-full border border-ink/70;
+}
+
+.pill-tab {
+  @apply px-4 py-1.5 rounded-full text-sm font-semibold border-2 border-ink whitespace-nowrap transition-colors dark:border-cream-soft/70;
+}
+
+.pill-tab-active {
+  @apply bg-ink text-cream-soft dark:bg-cream-soft dark:text-ink;
+}
+
+.pill-tab-idle {
+  @apply bg-transparent text-ink hover:bg-butter/60 dark:text-cream-soft dark:hover:bg-cream-soft/10;
+}
+
+/* ---------- Misc ---------- */
+.divider-dashed {
+  @apply border-t-2 border-dashed border-ink/20 dark:border-cream-soft/20;
+}
