@@ -230,7 +230,6 @@ export default function AuthPage() {
                 <select className="input" value={role} onChange={(e) => setRole(e.target.value as Role)}>
                   <option value="student">Student</option>
                   <option value="teacher">Teacher</option>
-                  <option value="cr">Class Representative (CR)</option>
                 </select>
               </div>
               {role === 'student' && (
