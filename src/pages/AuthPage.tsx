@@ -122,10 +122,10 @@ export default function AuthPage() {
             <p className="text-sm text-ink/70 mb-3">
               Demo data is ready. Tap any name below to log straight into that dashboard.
             </p>
-            <div className="grid sm:grid-cols-3 gap-3">
+            <div className="grid sm:grid-cols-2 gap-3">
               <div>
                 <div className="text-xs font-semibold text-ink/50 mb-1">STUDENTS</div>
-                {DEMO_LOGINS.filter((u) => u.role === 'student').map((u) => (
+                {DEMO_LOGINS.filter((u) => u.role === 'student' || u.role === 'cr').map((u) => (
                   <button
                     key={u.email}
                     disabled={busy}
@@ -139,19 +139,6 @@ export default function AuthPage() {
               <div>
                 <div className="text-xs font-semibold text-ink/50 mb-1">TEACHERS</div>
                 {DEMO_LOGINS.filter((u) => u.role === 'teacher').map((u) => (
-                  <button
-                    key={u.email}
-                    disabled={busy}
-                    className="btn-outline w-full mb-1 text-sm"
-                    onClick={() => handleDemoLogin(u.email, u.role)}
-                  >
-                    {u.name}
-                  </button>
-                ))}
-              </div>
-              <div>
-                <div className="text-xs font-semibold text-ink/50 mb-1">CLASS REP</div>
-                {DEMO_LOGINS.filter((u) => u.role === 'cr').map((u) => (
                   <button
                     key={u.email}
                     disabled={busy}

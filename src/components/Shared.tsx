@@ -12,7 +12,7 @@ export function Navbar() {
   const home = user?.role === 'cr' ? '/cr' : user?.role === 'teacher' ? '/teacher' : '/student'
 
   return (
-    <div className="sticky top-0 z-20 px-3 sm:px-4 pt-3">
+    <div className="relative z-20 px-3 sm:px-4 pt-3">
       <nav className="max-w-6xl mx-auto flex items-center justify-between gap-3 bg-ink text-cream-soft
         rounded-full px-3 sm:px-5 py-2.5 shadow-pop border-2 border-ink">
         <Link to={user ? home : '/'} className="flex items-center gap-2 font-extrabold tracking-tight">
