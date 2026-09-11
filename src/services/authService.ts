@@ -10,6 +10,7 @@ import {
 
 import {
   auth,
+  authReady,
   isFirebaseConfigured,
 } from './firebase'
 
@@ -107,6 +108,7 @@ export async function signUp(
     isFirebaseConfigured &&
     auth
   ) {
+    await authReady
     try {
       const credential =
         await createUserWithEmailAndPassword(
@@ -205,32 +207,88 @@ export async function logIn(
   password: string
 ): Promise<UserProfile | null> {
 
+  // Validate email and password inputs
+  if (
+    !email ||
+    !password ||
+    typeof email !== 'string' ||
+    typeof password !== 'string'
+  ) {
+    throw new Error(
+      'Email and password are required.'
+    )
+  }
+
+  const emailTrimmed =
+    email.trim().toLowerCase()
+
+  if (emailTrimmed.length === 0) {
+    throw new Error(
+      'Email cannot be empty.'
+    )
+  }
+
+  if (password.length === 0) {
+    throw new Error(
+      'Password cannot be empty.'
+    )
+  }
+
   if (
     isFirebaseConfigured &&
     auth
   ) {
-    const credential =
-      await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
+    await authReady
+    try {
+      const credential =
+        await signInWithEmailAndPassword(
+          auth,
+          emailTrimmed,
+          password
+        )
+
+      const profile = await getById<UserProfile>(
+        'users',
+        credential.user.uid
       )
 
-    return getById<UserProfile>(
-      'users',
-      credential.user.uid
-    )
+      if (!profile) {
+        // Sign out the user since their profile doesn't exist
+        await fbSignOut(auth)
+        throw new Error(
+          'Your Firebase account exists, but its user profile is missing. Contact your administrator.'
+        )
+      }
+
+      return profile
+    } catch (error: any) {
+      if (
+        error?.code === 'auth/user-not-found' ||
+        error?.code ===
+          'auth/invalid-email' ||
+        error?.code ===
+          'auth/wrong-password'
+      ) {
+        throw new Error(
+          'Invalid email or password.'
+        )
+      }
+
+      throw error
+    }
   }
 
   const found =
     readLocalUsers().find(
       (user) =>
         user.email.toLowerCase() ===
-        email.toLowerCase()
+        emailTrimmed
     )
 
   if (!found) {
-    return null
+    throw new Error(
+      'Invalid email or password.'
+    )
   }
 
   const storedHash =
@@ -243,14 +301,16 @@ export async function logIn(
     storedHash !==
       (await sha256(password))
   ) {
-    return null
+    throw new Error(
+      'Invalid email or password.'
+    )
   }
 
   localStorage.setItem(
     LS_USER,
     JSON.stringify({
       uid: found.uid,
-      email,
+      email: emailTrimmed,
     })
   )
 

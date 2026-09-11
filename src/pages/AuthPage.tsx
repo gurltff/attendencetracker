@@ -56,7 +56,6 @@ export default function AuthPage() {
     setBusy(true)
     try {
       const profile = await logIn(demoEmail, DEMO_PASSWORD)
-      if (!profile) throw new Error('Run "Set up demo data" first.')
       setUser(profile)
       push(`Demo login: ${profile.name}`, 'success')
       nav(demoRole === 'cr' ? '/cr' : demoRole === 'teacher' ? '/teacher' : '/student')
@@ -81,7 +80,6 @@ export default function AuthPage() {
         nav(profile.role === 'cr' ? '/cr' : profile.role === 'teacher' ? '/teacher' : '/student')
       } else {
         const profile = await logIn(email, password)
-        if (!profile) throw new Error('Invalid email or password.')
         setUser(profile)
         push(`Welcome back, ${profile.name}!`, 'success')
         nav(profile.role === 'cr' ? '/cr' : profile.role === 'teacher' ? '/teacher' : '/student')

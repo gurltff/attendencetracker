@@ -1,5 +1,10 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app'
-import { getAuth, type Auth } from 'firebase/auth'
+import {
+  browserLocalPersistence,
+  getAuth,
+  setPersistence,
+  type Auth,
+} from 'firebase/auth'
 import { getFirestore, type Firestore } from 'firebase/firestore'
 import { getStorage, type FirebaseStorage } from 'firebase/storage'
 
@@ -12,7 +17,7 @@ const cfg = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-export const isFirebaseConfigured = Boolean(cfg.apiKey && cfg.projectId)
+export const isFirebaseConfigured = Object.values(cfg).every(Boolean)
 
 // Config flag: allow attendance submission when location permission fails.
 export const ALLOW_LOCATION_UNAVAILABLE =
@@ -22,10 +27,12 @@ let app: FirebaseApp | undefined
 let auth: Auth | undefined
 let db: Firestore | undefined
 let storage: FirebaseStorage | undefined
+export let authReady: Promise<void> = Promise.resolve()
 
 if (isFirebaseConfigured) {
   app = initializeApp(cfg)
   auth = getAuth(app)
+  authReady = setPersistence(auth, browserLocalPersistence)
   db = getFirestore(app)
   storage = getStorage(app)
 } else {
